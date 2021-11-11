@@ -14,11 +14,13 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Iterator;
+import java.util.Scanner;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main extends Application {
+    public static Scanner scanner=new Scanner(System.in);
     public static ExecutorService threadPool;//스레드를 관리하는 라이브러리
     public static Vector<Client> clients = new Vector<Client>();
 
@@ -35,20 +37,18 @@ public class Main extends Application {
             }
             return;
         }
-        Runnable thread = new Runnable() {//클라이언트가 접속할 때까지 기다리는 쓰레드
-            @Override
-            public void run() {
-                while(true){
-                    try{
-                        Socket socket = serverSocket.accept();
-                        clients.add(new Client(socket));
-                        System.out.println("[클라이언트 접속] "+socket.getRemoteSocketAddress()+": "+Thread.currentThread().getName());
-                    } catch (IOException e) {
-                        if(!serverSocket.isClosed()){
-                            stopServer();
-                        }
-                        break;
+        //클라이언트가 접속할 때까지 기다리는 쓰레드
+        Runnable thread = () -> {
+            while(true){
+                try{
+                    Socket socket = serverSocket.accept();
+                    clients.add(new Client(socket));
+                    System.out.println("[클라이언트 접속] "+socket.getRemoteSocketAddress()+": "+Thread.currentThread().getName());
+                } catch (IOException e) {
+                    if(!serverSocket.isClosed()){
+                        stopServer();
                     }
+                    break;
                 }
             }
         };
@@ -89,12 +89,16 @@ public class Main extends Application {
         BorderPane.setMargin(toggleButton, new Insets(1,0,0,0));
         root.setBottom(toggleButton);
 
-        String IP = "127.0.0.1";
-        int port = 9876;
-
+        //String IP = "127.0.0.1";
+        //int port = 9876;
+        System.out.print("IP와 port 번호를 입력하세요\n");
+        String IP=scanner.nextLine();
+        int port=scanner.nextInt();
         toggleButton.setOnAction(event->{
             if(toggleButton.getText().equals("시작하기")){
                 startServer(IP,port);
+                System.out.println("IP 주소는 "+IP+"입니다.");
+                System.out.println("port 주소는 "+port+"입니다.");
                 Platform.runLater(()->{
                     String message = String.format("[서버 시작]\n", IP, port);
                     textArea.appendText(message);
